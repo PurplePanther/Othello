@@ -1,355 +1,152 @@
+import javafx.geometry.HPos;
+import javafx.geometry.VPos;
+import javafx.scene.layout.GridPane;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
+
 import java.util.ArrayList;
+import java.util.List;
 
-public class ReversiBoard {
-    public int getSizeX() {
-        return sizeX;
-    }
+import static javafx.scene.paint.Color.BLACK;
+import static javafx.scene.paint.Color.TRANSPARENT;
+import static javafx.scene.paint.Color.WHITE;
 
-    public int getSizeY() {
-        return sizeY;
-    }
+public class ReversiBoard extends GridPane {
 
-    //board size X*Y.
-    int sizeX, sizeY;
+    private int numRows;
+    private int numCols;
+    private Enums.PlayersColors[][] boardMatrix;
+    private List<BoardRectangle> rectangles;
+    private Color player1,player2;
+    /**
+     * Constructor.
+     *
+     * @param numRows number of rows.
+     * @param numCols number of columns.
+     */
+    ReversiBoard(int numRows, int numCols) {
+        this.getChildren().clear();
+        this.setGridLinesVisible(false);
+        this.setGridLinesVisible(true);
 
-    //2D array of Cells.
-    Cell[][] gameBoard;
-
-    public Cell[][] getGameBoard() {
-        return gameBoard;
-    }
-
-    public ReversiBoard(int sizeX, int sizeY) {
-        this.sizeX = sizeX;
-        this.sizeY = sizeY;
-
-        this.gameBoard = new Cell[sizeX][sizeY];
-        
-        intiBoard();
-        
-    }
-
-    private void intiBoard() {
-        for (int i = 0; i < sizeX; i++) {
-            for(int j = 0; j < sizeY; j++) {
-                this.gameBoard[i][j] = new Cell(i,j);
-                this.gameBoard[i][j].setContainingValue(false);
-                this.gameBoard[i][j].setColor(-1);
+        this.numRows = numRows;
+        this.numCols = numCols;
+        boardMatrix = new Enums.PlayersColors[numRows][numCols];
+        for (int i = 0; i < numRows; i++) {
+            for (int j = 0; j < numCols; j++) {
+                boardMatrix[i][j] = Enums.PlayersColors.NoColor;
             }
         }
-
-        int mid=sizeX/2;
-        //starting position of O's
-        this.gameBoard[mid-1][mid-1].setContainingValue(true);
-        this.gameBoard[mid][mid].setContainingValue(true);
-        this.gameBoard[mid-1][mid-1].setColor(0);
-        this.gameBoard[mid][mid].setColor(0);
-
-        //starting position of X's
-        this.gameBoard[mid-1][mid].setContainingValue(true);
-        this.gameBoard[mid][mid-1].setContainingValue(true);
-        this.gameBoard[mid-1][mid].setColor(1);
-        this.gameBoard[mid][mid-1].setColor(1);
-
+        this.rectangles = new ArrayList<>();
     }
 
-    private boolean pointIsValid(int x, int y) {
-        if( x < 0 || y < 0 ||
-                x >= this.sizeX || y >= this.sizeY){
-            return false;
-        }
-
-        return true;
+    public void setColors(Color player1,Color player2){
+        this.player1 = player1;
+        this.player2 = player2;
     }
 
-
-
-    public void flipCellsBetween(Cell x, Cell y){
-        int directionX = 0;
-        int directionY = 0;
-        int cellXX = x.getX();
-        int cellYX = y.getX();
-        //getting direction X.
-        if (cellXX > cellYX) {
-            directionX = -1;
-        } else if(cellXX < cellYX) {
-            directionX = 1;
-        } else {
-            directionX = 0;
-        }
-
-        int cellXY = x.getY();
-        int cellYY = y.getY();
-        //getting direction Y.
-        if (cellXY > cellYY) {
-            directionY = -1;
-        } else if(x.getY() < y.getY()) {
-            directionY = 1;
-        } else {
-            directionY = 0;
-        }
-
-        while((cellYX != cellXX) || (cellXY != cellYY)) {
-            cellXX+=directionX;
-            cellXY+=directionY;
-            if(x.getColor() == 1) {
-                this.gameBoard[cellXX][cellXY].setColor(1);
-            }else{
-                this.gameBoard[cellXX][cellXY].setColor(0);
-            }
-        }
+    /**
+     * Take symbol and put it on board in wanted row and column.
+     *
+     * @param row    wanted row.
+     * @param column wanted column.
+     * @param color  wanted color.
+     */
+    void putSymbolOnBoard(int row, int column, Enums.PlayersColors color) {
+        boardMatrix[row - 1][column - 1] = color;
     }
 
+    //Returns true if row and column is
 
-    public void placePiece(int color, int positionX, int positionY){
-        ArrayList<Cell> listConnections =  connectionsWith(gameBoard[positionX-1][positionY-1],color);
-        this.gameBoard[positionX-1][positionY-1].setColor(color);
-        this.gameBoard[positionX-1][positionY-1].setContainingValue(true);
-        int i = 0;
-        for (Cell currentCell: listConnections){
-            this.flipCellsBetween(gameBoard[positionX-1][positionY-1],currentCell);
-        }
-
-
-        listConnections.clear();
+    /**
+     * Checks if given coordinate is on board.
+     *
+     * @param row    wanted row.
+     * @param column wanted column.
+     * @return true if on board, else otherwise.
+     */
+    boolean isOnBoard(int row, int column) {
+        return ((row > 0) && (row <= numRows) && (column > 0) && (column <= numCols));
     }
 
-    public ArrayList<Cell> connectionsWith(Cell x, int color){
-        ArrayList<Cell> Connections = new ArrayList<Cell>();
+    //Returns symbol that is in input row and column place.
 
-        //checking if the cell is a valid cell.
-        if(!this.isValidCell(x.getX(),x.getY(),color)){
+    /**
+     * Return symbol by place.
+     *
+     * @param row    row place.
+     * @param column column place.
+     * @return symbol from wanted place.
+     */
+    Enums.PlayersColors getSymbolByPlace(int row, int column) {
+        if (!isOnBoard(row, column)) {
+            throw new RuntimeException("Invalid place!");
+        }
+        return boardMatrix[row - 1][column - 1];
+    }
 
-            return Connections;
-        } else {
+    /**
+     * Getter.
+     *
+     * @return numRows.
+     */
+    int getNumRows() {
+        return this.numRows;
+    }
 
-            int currentX = x.getX();
-            int currentY = x.getY();
+    /**
+     * Getter
+     *
+     * @return numCols.
+     */
+    int getNumCols() {
+        return this.numCols;
+    }
 
-            //checking if the cell we are looking at is currently empty.
-            if(this.gameBoard[currentX][currentY].isEmpty()) {
+    public void drawBoard(int rootPrefHeight, int rootPrefWidth) {
 
-                //checking for surrounding cells.
-                for (int i = -1; i <= 1 ; ++i){
-                    for (int j = -1; j <= 1; ++j){
-                        // check if surrounding cells are in the boundaries.
-                        if(!this.pointIsValid(currentX+i,currentY+j) || (i==0 && j==0)) {
-                            continue;
-                        }
-                        //we are making sure the current neighbor cell we are looking at isn't empty.
-                        boolean isNeighborEmpty = this.gameBoard[currentX+i][currentY+j].isEmpty();
-
-                        //if the neighbor cell is empty we move on to another neighbor cell.
-                        if(isNeighborEmpty) {
-                            continue;
-                        }
-                        //we are making sure the sign of the neighbor cell is different than ours.
-                        boolean hasDiffSign = (this.gameBoard[currentX+i][currentY+j].getColor() != color);
-
-                        if(!isNeighborEmpty && hasDiffSign){
-                            boolean found = false;
-                            int posX = currentX+i+i;
-                            int posY = currentY+j+j;
-
-                            if(!pointIsValid(posX,posY)){
-                                continue; // testing continue v break;
-                            }
-                            boolean friendlyNeighbor = this.gameBoard[posX][posY].isEmpty();
-                            //checking if there is a piece that we can possibly connect with so we can flip.
-                            if(friendlyNeighbor) {
-                                continue;
-                            }
-
-                            //checking if possible connection Cell is friendly.
-                            boolean hasSameSign = (this.gameBoard[posX][posY].getColor() == color);
-                            if(!friendlyNeighbor && hasSameSign){
-
-                                // this cell can be played.
-                                Connections.add(new Cell(posX,posY));
-                            } else if (!hasSameSign) {
-                                while (!found){
-                                    posX = posX + i;
-                                    posY = posY + j;
-
-                                    if(!pointIsValid(posX,posY)){
-                                        break;
-                                    }
-                                    if(this.gameBoard[posX][posY].getColor() == color) {
-                                        Connections.add(new Cell(posX,posY));
-                                    }
-                                }
-                            }
-                        }
-                    }
+        int guiHeight = rootPrefHeight - 50;
+        int guiWidth = rootPrefWidth - 50;
+        int cellHeight = guiHeight / this.numCols;
+        int cellWidth = guiWidth / this.numRows;
+        int radius = (cellHeight + cellWidth)/8;
+        for (int i = 0; i < this.numRows; i++) {
+            for (int j = 0; j < this.numCols; j++) {
+                BoardRectangle newRec = new BoardRectangle(cellWidth, cellHeight, TRANSPARENT, j, i);
+                rectangles.add(newRec);
+                this.add(newRec.getRectangle(), i, j);
+                if (getSymbolByPlace(i + 1, j + 1) == Enums.PlayersColors.Black) {
+                    Circle black = new Circle(radius);
+                    black.setFill(this.player1);
+                    this.add(black, j, i);
+                    GridPane.setValignment(black, VPos.CENTER);
+                    GridPane.setHalignment(black, HPos.CENTER);
+                } else if (getSymbolByPlace(i + 1, j + 1) == Enums.PlayersColors.White) {
+                    Circle white = new Circle(radius);
+                    white.setFill(this.player2);
+                    white.setStroke(BLACK);
+                    this.add(white, j, i);
+                    GridPane.setValignment(white, VPos.CENTER);
+                    GridPane.setHalignment(white, HPos.CENTER);
                 }
             }
         }
-        return Connections;
+
     }
 
-    public boolean isValidCell(int x, int y, int sign) {
-
-        //if the cell we are looking for is out of boundaries.
-        if(!pointIsValid(x,y)) {
-            return false;
-        }else{
-            int currentX = x;
-            int currentY = y;
-            //checking if the cell we are looking at is empty.
-            if(this.gameBoard[currentX][currentY].isEmpty()) {
-
-                //checking for surrounding cells.
-                for (int i = -1; i <= 1 ; ++i){
-                    for (int j = -1; j <= 1; ++j){
-                        // check if surrounding cells are in the boundaries.
-                        if(!pointIsValid(currentX+i,currentY+j) || (i==0 && j==0)) {
-                            continue;
-                        }
-                        //we are making sure the current neighbor cell we are looking at isn't empty.
-                        boolean isNeighborEmpty = this.gameBoard[currentX+i][currentY+j].isEmpty();
-
-                        //if the neighbor cell is empty we move on to another neighbor cell.
-                        if(isNeighborEmpty) {
-                            continue;
-                        }
-                        //we are making sure the sign of the neighbor cell is different than ours.
-                        boolean hasDiffSign = (this.gameBoard[currentX+i][currentY+j].getColor() != sign);
-                        if(!isNeighborEmpty && hasDiffSign){
-                            boolean found = false;
-                            int posX = currentX+i+i;
-                            int posY = currentY+j+j;
-
-                            if(!pointIsValid(posX,posY)) {
-                                continue;
-                            }
-
-                            boolean friendlyNeighbor = this.gameBoard[posX][posY].isEmpty();
-
-                            //checking if there is a piece that we can possibly connect with so we can flip.
-                            if(friendlyNeighbor) {
-                                continue;
-                            }
-                            //checking if possible connection Cell is friendly.
-                            boolean hasSameSign = (this.gameBoard[posX][posY].getColor() == sign);
-                            if(!friendlyNeighbor && hasSameSign){
-
-                                // this cell can be played.
-                                return true;
-                            } else if (!hasSameSign) {
-                                while (!found){
-                                    posX += i;
-                                    posY += j;
-                                    if(!pointIsValid(posX,posY)){
-                                        break;
-                                    }
-                                    if(this.gameBoard[posX][posY].getColor() == sign) {
-                                        return true;
-                                    }
-                                }
-                            }
-                        }
-                    }
+    public Cell getClickedPlace() {
+        for (int i = 0; i < rectangles.size(); i++) {
+            for (int j = 0; j < rectangles.size(); j++) {
+                if (this.rectangles.get(i).isClicked()) {
+                    this.rectangles.get(i).resetIsClicked();
+                    BoardRectangle currentRectangle = rectangles.get(i);
+                    return new Cell(currentRectangle.getRow() + 1,
+                            currentRectangle.getCol() + 1);
                 }
             }
         }
-        return false;
+        return null;
     }
 
-
-    public int countXCells() {
-        int x = 0;
-        for(int i = 0; i < this.sizeX ; ++i) {
-            for(int j = 0; j < this.sizeY ; ++j) {
-                if(!this.gameBoard[i][j].isEmpty()){
-                    if(this.gameBoard[i][j].getColor() == 1){
-                        x++;
-                    }
-                }
-            }
-        }
-        return x;
-    }
-
-    public int countOCells() {
-        int x = 0;
-        for(int i = 0; i < this.sizeX ; ++i) {
-            for(int j = 0; j < this.sizeY ; ++j) {
-                if(!this.gameBoard[i][j].isEmpty()){
-                    if(this.gameBoard[i][j].getColor() == 0){
-                        x++;
-                    }
-                }
-            }
-        }
-        return x;
-    }
-
-
-    public void printBoard() {
-        System.out.println("Current board");
-        //printing the row #'s.
-        System.out.print(" " + "|");
-        for (int i = 1; i <= this.sizeX ; ++i) {
-            System.out.print(i + " | ");
-        }
-        //printing the line separation.
-        System.out.println();
-        for (int i = 0; i <= this.sizeX-1; ++i){
-            System.out.print("----");
-        }
-        System.out.print("--");
-        System.out.println();
-
-        char y;
-        for (int i = 0; i < this.sizeX ; ++i) {
-            System.out.print(i+1 + " |");
-            for (int j = 0; j < this.sizeY; ++j) {
-                if(this.gameBoard[i][j].isEmpty()) {
-                    y = ' ';
-                }else if(this.gameBoard[i][j].getColor() == 1) {
-                    y = 'X';
-                }else{
-                    y = 'O';
-                }
-                System.out.print(y + " | ");
-            }
-
-            //printing the line separation.
-            System.out.println();
-            for (int f = 0; f <= this.sizeX-1; ++f){
-                System.out.print("----");
-            }
-            System.out.print("--");
-            System.out.println();
-            //printing the line separation.
-
-        }
-        return;
-    }
-
-
-    public boolean isFull(){
-            if(this.countOCells() + this.countXCells() == this.sizeX*this.sizeY) {
-                return true;
-            }
-            return false;
-    }
-
-
-    public ArrayList<Cell> possibleMoves(int sign) {
-        ArrayList<Cell> possibleCells = new ArrayList<Cell>();
-
-        // going over the entire board looking for possible moves.
-        for (int i = 0; i < this.sizeX; i++) {
-            for (int j = 0; j < this.sizeY; j++) {
-                //checking is cell i,j is playable.
-                if (this.isValidCell(i, j, sign)) {
-                    possibleCells.add(new Cell(i, j));
-
-                }
-            }
-        }
-        return possibleCells;
-    }
 
 }

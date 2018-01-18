@@ -1,98 +1,158 @@
-import java.util.ArrayList;
+import javafx.scene.paint.Color;
 
-public abstract class Player {
-    ReversiBoard gameBoard;
-    int color;
+import java.util.*;
 
+public class Player {
 
-    public Player(int color) {
-        this.color = color;
+    protected Enums.PlayersColors sign;
+    protected ReversiBoard board;
+    protected List<Cell> playerMoves;
+    protected GameLogic gameLogic;
+    private Color color;
+
+    public Color getColor() {
+        return color;
+    }
+
+    Player(Enums.PlayersColors color, Color playersColor, ReversiBoard board,
+           GameLogic gameLogic) {
+        this.sign = color;
+        this.gameLogic = gameLogic;
+        this.board = board;
+        this.color = playersColor;
+        this.playerMoves = new ArrayList<>();
     }
 
 
-    int getColor(){
-        return this.color;
+    void addPlayerSymbol(int row, int column) {
+        //Create new coordinate.
+        Cell newCoordinate = new Cell(row, column);
+        //Insert it to player moves.
+        playerMoves.add(newCoordinate);
+        //Put this symbol on board.
+        board.putSymbolOnBoard(row, column, this.sign);
     }
 
-    int getScore(){
-        int score=0;
-        if(this.color == 0){
-            score=this.gameBoard.countOCells();
-        } else {
-            score=this.gameBoard.countXCells();
-        }
-        return score;
-    }
-
-    void playOneTurn(){
-        Cell x = null;
-        char sign;
-
-        if(this.color == 1) {
-            sign = 'X';
-        } else {
-            sign = 'O';
-        }
-
-        //checking if player can move
-        if(this.hasValidMoves()){
-
-            System.out.println(sign + ": It's your move.");
-            System.out.print("Your possible moves: ");
-
-            ArrayList<Cell> array = this.gameBoard.possibleMoves(this.color);
-            System.out.println(array.size());
-            for(int i=0 ; i < array.size() ;i++){
-                    System.out.print(array.get(i));
-                    if(i != array.size()-1){
-                        System.out.print(",");
-                    }
+    void updatePlayerSymbolRemoved(List<Cell> removeCoordinates) {
+        //Remove each coordinate from vector.
+        for (int i = 0; i < removeCoordinates.size(); ++i) {
+            if (playerMoves.contains(removeCoordinates.get(i))) {
+                playerMoves.remove(removeCoordinates.get(i));
             }
-            System.out.println();
-            System.out.println();
+        }
+    }
 
-            boolean acceptablemove = false;
-            while(acceptablemove == false){
-                x = this.chooseMove();
-                if(this.gameBoard.isValidCell(x.getX()-1, x.getY()-1,this.color)){
-                    this.gameBoard.placePiece(this.color, x.getX(), x.getY());
-                    acceptablemove = true;
+    /**
+     * Gets add coordinates and add it to player moves vector.
+     *
+     * @param addCoordinates coordinates to add.
+     */
+    void updatePlayerSymbolAdd(List<Cell> addCoordinates) {
+        //Insert coordinates
+        for (int i = 0; i < addCoordinates.size(); ++i) {
+            if (!this.playerMoves.contains(addCoordinates.get(i))) {
+                this.playerMoves.add(addCoordinates.get(i));
+            }
+        }
+    }
 
-                }else{
-                    System.out.println("Error, not a valid move,");
-                    System.out.println("Please choose one of the valid moves above.");
+    int getScore() {
+        return this.playerMoves.size();
+    }
 
+    Map<Cell, List<Cell>> playOneTurn(Cell cell) {
+        //Print who it's turn to play.
+        //this.display.printPlayerTurn(getSymbol());
+        //Get map of all possible moves.
+        Map<Cell, List<Cell>> possibleMoves = this.gameLogic.getPossibleGameMoves(playerMoves,
+                sign);
+        List<Cell> allMoves = new ArrayList<>();
+        List<Cell> flippedSymbols = new ArrayList<>();
+        Map<Cell, List<Cell>> playerMove = new HashMap<>();
 
+        //For board coordinate, get its possible move and insert in to all moves vector.
+
+        for (Map.Entry<Cell, List<Cell>> moves : possibleMoves.entrySet()) {
+            for (int i = 0; i < moves.getValue().size(); i++) {
+                if (!allMoves.contains(moves.getValue().get(i))) {
+                    allMoves.add(moves.getValue().get(i));
                 }
             }
-            array.clear();
-        } else {
-            //player has no valid moves.
-            System.out.println(sign + ": It's your move.");
-            System.out.println("No possible Moves. Play passes back to the other player.");
-
-            return;
         }
-        //printing the updated board.
-        this.gameBoard.printBoard();
-        System.out.println(sign + " Played" + "(" + x.getX() + "," + x.getY() + ")");
-    }
 
-    void setGameBoard(ReversiBoard board){
-            this.gameBoard = board;
-    }
-
-    boolean hasValidMoves(){
-        ArrayList<Cell> array;
-        array = this.gameBoard.possibleMoves(this.color);
-        if(array.isEmpty()){
-            array.clear();
-            return false;
-        }else{
-            array.clear();
-            return true;
+        //Check if there are no possible moves and notify player about it.
+        if (allMoves.isEmpty()) {
+            //this.display.printMessage("No possible moves. Play passes back to the other player" +
+            //        ". Press enter to continue.");
+            //cin.ignore();
+            //Return empty map.
+            return playerMove;
         }
+
+        //Print all possible moves.
+        //this.display.printPossibleMoves(allMoves);
+        //printPossibleMoves(allMoves);
+        //Get player choice.
+        //Cell playerChoice = getPlayerChoice(allMoves);
+
+        //Get flipped symbols vector.
+        flippedSymbols = this.gameLogic.flipSymbols(possibleMoves,
+                cell, getSymbol());
+        //Return them.
+        playerMove.put(cell, flippedSymbols);
+        return playerMove;
     }
 
-    abstract Cell chooseMove();
+    Boolean checkIfValidMove(Cell coordinates) {
+        //Print who it's turn to play.
+        //this.display.printPlayerTurn(getSymbol());
+        //Get map of all possible moves.
+        Map<Cell, List<Cell>> possibleMoves = this.gameLogic.getPossibleGameMoves(playerMoves,
+                sign);
+        List<Cell> allMoves = new ArrayList<>();
+        List<Cell> flippedSymbols = new ArrayList<>();
+        Map<Cell, List<Cell>> playerMove = new HashMap<>();
+
+        //For board coordinate, get its possible move and insert in to all moves vector.
+
+        for (Map.Entry<Cell, List<Cell>> moves : possibleMoves.entrySet()) {
+            for (int i = 0; i < moves.getValue().size(); i++) {
+                if (!allMoves.contains(moves.getValue().get(i))) {
+                    allMoves.add(moves.getValue().get(i));
+                }
+            }
+        }
+
+        return allMoves.contains(coordinates);
+    }
+
+    Boolean isThereMoves() {
+        //Print who it's turn to play.
+        //this.display.printPlayerTurn(getSymbol());
+        //Get map of all possible moves.
+        Map<Cell, List<Cell>> possibleMoves = this.gameLogic.getPossibleGameMoves(playerMoves,
+                sign);
+        List<Cell> allMoves = new ArrayList<>();
+        List<Cell> flippedSymbols = new ArrayList<>();
+        Map<Cell, List<Cell>> playerMove = new HashMap<>();
+
+        //For board coordinate, get its possible move and insert in to all moves vector.
+
+        for (Map.Entry<Cell, List<Cell>> moves : possibleMoves.entrySet()) {
+            for (int i = 0; i < moves.getValue().size(); i++) {
+                if (!allMoves.contains(moves.getValue().get(i))) {
+                    allMoves.add(moves.getValue().get(i));
+                }
+            }
+        }
+
+        return (!allMoves.isEmpty());
+    }
+
+    Enums.PlayersColors getSymbol() {
+        return this.sign;
+    }
+
+
 }
+

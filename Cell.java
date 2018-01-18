@@ -1,48 +1,69 @@
+public class Cell implements Comparable {
 
-public class Cell {
-    int color;
-    int x,y;
-    boolean containingValue;
+    private int row;
+    private int column;
 
-
-
-    public Cell(int x, int y) {
-        this.x = x;
-        this.y = y;
-        this.color = -1;
-        this.containingValue = false;
+    //Board Coordinates constructor.
+    Cell(int row, int column) {
+        this.row = row;
+        this.column = column;
     }
 
-    public int getColor() {
-        return color;
-    }
-
-    public int getX() {
-        return x;
-    }
-
-    public int getY() {
-        return y;
-    }
-
-    public boolean isEmpty() {
-        return !containingValue;
+    /**
+     * to String overload
+     *
+     * @return string to represent board coordinate.
+     */
+    public String toString() {
+        String result = "(" + this.row + ", " + this.column + ')';
+        return result;
     }
 
 
-    public void setColor(int color) {
-        this.color = color;
+    /**
+     * Getter.
+     *
+     * @return Returns row parameter.
+     */
+    int getRow() {
+        return this.row;
     }
 
-    public void setXY(int x,int y) {
-        this.x = x;
-        this.y = y;
+    /**
+     * Getter.
+     *
+     * @return Returns column parameter.
+     */
+    int getColumn() {
+        return this.column;
     }
 
+    @Override
+    public int compareTo(Object o) {
+        Cell boardCoordinate = (Cell) o;
 
-    public void setContainingValue(boolean containingValue) {
-        this.containingValue = containingValue;
+        if (this.getRow() == boardCoordinate.getRow()) {
+            if (this.getColumn() < boardCoordinate.getColumn())
+                return -1;
+            else
+                return 1;
+        } else if (this.getColumn() == boardCoordinate.getColumn()) {
+            return 0;
+        } else {
+            if (this.getRow() < boardCoordinate.getRow()) {
+                return -1;
+            } else {
+                return 1;
+            }
+        }
     }
+
+    @Override
+    public boolean equals(Object other) {
+        Cell boardCoordinate = (Cell) other;
+        return ((this.getRow() == boardCoordinate.getRow()) &&
+                (this.getColumn() == boardCoordinate.getColumn()));
+
+    }
+
 }
-
-
