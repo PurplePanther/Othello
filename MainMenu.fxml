@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.text.Font?>
+
+<GridPane alignment="center" hgap="10.0" minHeight="300.0" minWidth="200.0" vgap="10" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="MainMenuController">
+   <children>
+      <Label text="Reversi">
+         <font>
+            <Font size="35.0" />
+         </font>
+      </Label>
+      <Button fx:id="startButton" minHeight="30.0" minWidth="120.0" mnemonicParsing="false" onAction="#startGame" text="Start" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER" />
+      <Button layoutX="79.0" layoutY="127.0" minHeight="30.0" minWidth="120.0" mnemonicParsing="false" onAction="#openSettings" text="Settings" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="CENTER" />
+      <Label text="Made By Tal &amp; Natalie" textAlignment="RIGHT" GridPane.halignment="RIGHT" GridPane.rowIndex="3" />
+   </children>
+   <rowConstraints>
+      <RowConstraints minHeight="60.0" prefHeight="60.0" />
+      <RowConstraints />
+      <RowConstraints minHeight="10.0" prefHeight="30.0" />
+      <RowConstraints minHeight="10.0" prefHeight="30.0" />
+   </rowConstraints>
+   <columnConstraints>
+      <ColumnConstraints />
+   </columnConstraints>
+</GridPane>
